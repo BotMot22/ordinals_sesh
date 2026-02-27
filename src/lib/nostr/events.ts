@@ -1,4 +1,4 @@
-import { type Event, type EventTemplate, finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools';
+import type { Event, EventTemplate } from 'nostr-tools';
 import { NOSTR_KIND_OPENORDEX } from '../constants';
 
 export interface OrderEventContent {
@@ -75,7 +75,8 @@ export function parseOrderEvent(event: Event): OrderEventContent | null {
  * Sign an event with a generated ephemeral key.
  * Used when the wallet doesn't support Nostr signing.
  */
-export function signEventWithEphemeralKey(template: EventTemplate): Event {
+export async function signEventWithEphemeralKey(template: EventTemplate): Promise<Event> {
+  const { finalizeEvent, generateSecretKey } = await import('nostr-tools');
   const sk = generateSecretKey();
   return finalizeEvent(template, sk);
 }

@@ -82,6 +82,15 @@ export function base64ToHex(base64: string): string {
   return Buffer.from(base64, 'base64').toString('hex');
 }
 
+// PSBT format conversion aliases (no bitcoinjs-lib dependency)
+export function psbtHexToBase64(hex: string): string {
+  return hexToBase64(hex);
+}
+
+export function psbtBase64ToHex(base64: string): string {
+  return base64ToHex(base64);
+}
+
 export function getContentType(contentType: string): 'image' | 'text' | 'html' | 'audio' | 'video' | 'model' | 'unknown' {
   if (!contentType) return 'unknown';
   if (contentType.startsWith('image/')) return 'image';

@@ -1,5 +1,5 @@
 import type { WalletAdapter, ConnectedWallet, SignPsbtOptions } from '@/types/wallet';
-import { psbtBase64ToHex, psbtHexToBase64 } from '@/lib/bitcoin/psbt';
+import { psbtBase64ToHex, psbtHexToBase64 } from '@/lib/utils';
 
 declare global {
   interface Window {

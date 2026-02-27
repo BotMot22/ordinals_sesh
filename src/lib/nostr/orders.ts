@@ -2,8 +2,6 @@ import type { Event } from 'nostr-tools';
 import type { Order, OrderFilter } from '@/types/order';
 import { fetchEvents, subscribeEvents, publishEvent } from './client';
 import { createOrderEvent, parseOrderEvent, signEventWithEphemeralKey, getOrderFilter } from './events';
-import { validateSellerPsbt } from '../bitcoin/psbt';
-import { checkUtxoSpent } from '../bitcoin/utxo';
 
 /**
  * Fetch all active orders from Nostr relays.
@@ -57,7 +55,7 @@ export async function publishOrder(params: {
   utxo: { txid: string; vout: number; value: number };
 }): Promise<string> {
   const template = createOrderEvent(params);
-  const event = signEventWithEphemeralKey(template);
+  const event = await signEventWithEphemeralKey(template);
   await publishEvent(event);
   return event.id;
 }
@@ -68,6 +66,7 @@ export async function publishOrder(params: {
  */
 async function processEvents(events: Event[]): Promise<Order[]> {
   const orderMap = new Map<string, Order>();
+  const { validateSellerPsbt } = await import('../bitcoin/psbt');
 
   for (const event of events) {
     const parsed = parseOrderEvent(event);
@@ -101,6 +100,7 @@ async function processEvents(events: Event[]): Promise<Order[]> {
  * Check if an order is still valid (UTXO not spent).
  */
 export async function isOrderStale(order: Order): Promise<boolean> {
+  const { checkUtxoSpent } = await import('../bitcoin/utxo');
   return checkUtxoSpent(order.utxo.txid, order.utxo.vout);
 }
 

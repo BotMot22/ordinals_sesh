@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useEffect, useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Order } from '@/types/order';
-import { fetchOrders, subscribeToOrders } from '@/lib/nostr/orders';
-import { closePool } from '@/lib/nostr/client';
 
 interface NostrContextValue {
   orders: Order[];
@@ -32,6 +30,7 @@ export function NostrProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
+      const { fetchOrders } = await import('@/lib/nostr/orders');
       const fetched = await fetchOrders({ sortBy: 'recent' });
       setOrders(fetched);
       setIsConnected(true);
@@ -46,22 +45,32 @@ export function NostrProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshOrders();
 
-    // Subscribe to new orders
-    subRef.current = subscribeToOrders((newOrder) => {
-      setOrders((prev) => {
-        const existing = prev.findIndex((o) => o.inscriptionId === newOrder.inscriptionId);
-        if (existing >= 0) {
-          const updated = [...prev];
-          updated[existing] = newOrder;
-          return updated;
-        }
-        return [newOrder, ...prev];
-      });
-    });
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { subscribeToOrders } = await import('@/lib/nostr/orders');
+        if (cancelled) return;
+        subRef.current = subscribeToOrders((newOrder) => {
+          setOrders((prev) => {
+            const existing = prev.findIndex((o) => o.inscriptionId === newOrder.inscriptionId);
+            if (existing >= 0) {
+              const updated = [...prev];
+              updated[existing] = newOrder;
+              return updated;
+            }
+            return [newOrder, ...prev];
+          });
+        });
+      } catch {
+        // Nostr subscription failed, orders still available via refresh
+      }
+    })();
 
     return () => {
+      cancelled = true;
       subRef.current?.close();
-      closePool();
+      import('@/lib/nostr/client').then(({ closePool }) => closePool()).catch(() => {});
     };
   }, [refreshOrders]);
 
