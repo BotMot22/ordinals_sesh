@@ -19,9 +19,15 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const [manualAddress, setManualAddress] = useState('');
   const [showManual, setShowManual] = useState(false);
 
-  const handleConnect = async (type: WalletType) => {
+  const handleConnect = async (type: WalletType, installUrl?: string) => {
     if (type === 'manual') {
       setShowManual(true);
+      return;
+    }
+
+    // If wallet isn't installed, open install page
+    if (installUrl) {
+      window.open(installUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
@@ -88,12 +94,18 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
           {WALLETS.map((walletInfo) => {
             const adapter = getWalletAdapter(walletInfo.type);
             const installed = adapter.isInstalled();
+            // Xverse uses sats-connect which has its own provider detection —
+            // always allow clicking to connect (sats-connect handles not-installed)
+            const canConnect = installed || walletInfo.type === 'xverse' || walletInfo.type === 'manual';
             const isConnecting = connecting === walletInfo.type;
 
             return (
               <button
                 key={walletInfo.type}
-                onClick={() => handleConnect(walletInfo.type)}
+                onClick={() => handleConnect(
+                  walletInfo.type,
+                  !canConnect ? walletInfo.url : undefined
+                )}
                 disabled={isConnecting}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 transition-all group"
               >
@@ -111,20 +123,16 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">{walletInfo.description}</p>
+                  <p className="text-xs text-gray-500">
+                    {!canConnect
+                      ? 'Click to install'
+                      : walletInfo.description}
+                  </p>
                 </div>
                 {isConnecting ? (
                   <div className="w-5 h-5 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
-                ) : !installed && walletInfo.type !== 'manual' ? (
-                  <a
-                    href={walletInfo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-gray-500 hover:text-brand-400"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                ) : !canConnect ? (
+                  <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-brand-400" />
                 ) : null}
               </button>
             );

@@ -74,3 +74,15 @@ export const FEATURED_COLLECTIONS = [
   'omb',
   'pizza-ninjas',
 ];
+
+// Maps our collection slugs to Magic Eden collection symbols
+export const ME_COLLECTIONS: Record<string, string> = {
+  'bitcoin-puppets': 'bitcoin-puppets',
+  'nodemonkes': 'nodemonkes',
+  'quantum-cats': 'quantum-cats',
+  'bitcoin-frogs': 'bitcoin-frogs',
+  'omb': 'ordinal-maxi-biz',
+  'pizza-ninjas': 'pizza-ninjas',
+};
+
+export const ME_API_BASE = 'https://api-mainnet.magiceden.dev/v2/ord/btc';

@@ -1,3 +1,5 @@
+export type ListingSource = 'nostr' | 'magiceden';
+
 export interface Order {
   id: string;
   inscriptionId: string;
@@ -13,6 +15,10 @@ export interface Order {
     vout: number;
     value: number;
   };
+  source?: ListingSource;
+  marketplaceUrl?: string;
+  collectionSymbol?: string;
+  inscriptionNumber?: number;
 }
 
 export type OrderStatus = 'active' | 'sold' | 'cancelled' | 'expired';

@@ -2,13 +2,16 @@
 
 import { InscriptionCard } from './InscriptionCard';
 import { InscriptionCardSkeleton } from '@/components/common/Skeleton';
+import type { ListingSource } from '@/types/order';
 
-interface InscriptionGridItem {
+export interface InscriptionGridItem {
   id: string;
   number?: number;
   contentType?: string;
   price?: number;
   collectionName?: string;
+  source?: ListingSource;
+  marketplaceUrl?: string;
 }
 
 interface InscriptionGridProps {
@@ -46,6 +49,8 @@ export function InscriptionGrid({ items, isLoading, emptyMessage = 'No inscripti
           contentType={item.contentType}
           price={item.price}
           collectionName={item.collectionName}
+          source={item.source}
+          marketplaceUrl={item.marketplaceUrl}
         />
       ))}
     </div>

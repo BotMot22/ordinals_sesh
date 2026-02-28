@@ -15,6 +15,9 @@ export default function Home() {
   const recentListings = (listings || []).slice(0, 10).map((order) => ({
     id: order.inscriptionId,
     price: order.price,
+    number: order.inscriptionNumber,
+    source: order.source,
+    marketplaceUrl: order.marketplaceUrl,
   }));
 
   return (

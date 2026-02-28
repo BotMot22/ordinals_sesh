@@ -1,12 +1,47 @@
-import { COLLECTIONS_GITHUB } from '../constants';
+import { COLLECTIONS_GITHUB, ME_API_BASE, ME_COLLECTIONS } from '../constants';
 import type { Collection, CollectionMeta } from '@/types/collection';
 
-let collectionsCache: Map<string, Collection> | null = null;
+const ME_HEADERS: Record<string, string> = {
+  Accept: 'application/json',
+};
 
 /**
- * Fetch collection metadata from the ordinals-collections GitHub repo.
+ * Fetch collection metadata — tries Magic Eden first, falls back to GitHub.
  */
 export async function fetchCollectionMeta(slug: string): Promise<CollectionMeta | null> {
+  const meSymbol = ME_COLLECTIONS[slug] || slug;
+
+  // Try ME API with retry on 429
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await fetch(`${ME_API_BASE}/stat?collectionSymbol=${meSymbol}`, {
+        headers: ME_HEADERS,
+      });
+      if (res.status === 429) {
+        const retryAfter = Math.min(parseInt(res.headers.get('Retry-After') || '3', 10), 5);
+        await new Promise((r) => setTimeout(r, retryAfter * 1000));
+        continue;
+      }
+      if (res.ok) {
+        const stats = await res.json();
+        if (stats && stats.symbol) {
+          const name = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          return {
+            name,
+            inscription_icon: '',
+            icon: '',
+            supply: String(stats.supply || '0'),
+            description: '',
+          };
+        }
+      }
+      break;
+    }
+  } catch {
+    // fall through to GitHub
+  }
+
+  // Fallback to GitHub collections repo
   try {
     const res = await fetch(`${COLLECTIONS_GITHUB}/${slug}/meta.json`);
     if (!res.ok) return null;
@@ -24,7 +59,6 @@ export async function fetchCollectionInscriptions(slug: string): Promise<string[
     const res = await fetch(`${COLLECTIONS_GITHUB}/${slug}/inscriptions.json`);
     if (!res.ok) return [];
     const data = await res.json();
-    // The file contains an array of objects with { id: string }
     return Array.isArray(data) ? data.map((item: any) => item.id || item) : [];
   } catch {
     return [];
@@ -54,22 +88,4 @@ export async function fetchCollection(slug: string): Promise<Collection | null> 
     websiteLink: meta.website_link,
     inscriptions,
   };
-}
-
-/**
- * Fetch a curated list of collection slugs.
- */
-export async function fetchCollectionSlugs(): Promise<string[]> {
-  try {
-    const res = await fetch(
-      'https://api.github.com/repos/ordinals-wallet/ordinals-collections/contents/collections'
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data
-      .filter((item: any) => item.type === 'dir')
-      .map((item: any) => item.name);
-  } catch {
-    return [];
-  }
 }

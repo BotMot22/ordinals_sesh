@@ -100,7 +100,27 @@ export default function InscriptionPage({ params }: { params: { id: string } }) 
           />
         )}
 
-        {!isOwner && listing && (
+        {!isOwner && listing && listing.source === 'magiceden' && listing.marketplaceUrl && (
+          <div className="glass-card p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-orange-500 text-white">ME</span>
+              <span className="text-white font-medium">Listed on Magic Eden</span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              This inscription is listed for {(listing.price / 100_000_000).toFixed(8)} BTC on Magic Eden.
+            </p>
+            <a
+              href={listing.marketplaceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary w-full text-center block"
+            >
+              Buy on Magic Eden
+            </a>
+          </div>
+        )}
+
+        {!isOwner && listing && listing.source !== 'magiceden' && (
           <BuyForm
             order={listing}
             estimatedFee={estimatedFee}

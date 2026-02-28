@@ -42,6 +42,9 @@ export default function ListingsPage() {
     return filtered.map((order) => ({
       id: order.inscriptionId,
       price: order.price,
+      number: order.inscriptionNumber,
+      source: order.source,
+      marketplaceUrl: order.marketplaceUrl,
     }));
   }, [listings, searchQuery]);
 

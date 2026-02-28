@@ -51,7 +51,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         (walletAdapter as any).setAddress(manualAddress);
       }
 
-      if (type !== 'manual' && !walletAdapter.isInstalled()) {
+      // For sats-connect wallets (xverse), skip the isInstalled gate —
+      // sats-connect has its own provider detection that catches cases
+      // where the extension injects after page load or under different globals.
+      // The adapter's connect() handles the "not installed" error itself.
+      if (type !== 'manual' && type !== 'xverse' && !walletAdapter.isInstalled()) {
         throw new Error(`${walletAdapter.name} is not installed. Please install it from ${walletAdapter.url}`);
       }
 

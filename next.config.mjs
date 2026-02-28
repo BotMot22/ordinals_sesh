@@ -15,6 +15,7 @@ const nextConfig = {
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
+      syncWebAssembly: true,
       layers: true,
     };
 
@@ -23,6 +24,12 @@ const nextConfig = {
       test: /\.wasm$/,
       type: 'webassembly/async',
     });
+
+    // Suppress tiny-secp256k1 WASM warning
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /tiny-secp256k1/ },
+    ];
 
     return config;
   },
